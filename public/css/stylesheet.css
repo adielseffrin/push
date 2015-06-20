@@ -1,0 +1,80 @@
+/*imports*/
+@import url(http://fonts.googleapis.com/css?family=Droid+Serif:700);
+
+
+/*-------------master.blade.php--------------*/
+.sidebar{
+	display: block;
+	position: relative;
+	float:left;
+	left: 0;
+	width: 13%;
+	height: 100vh;
+	background-color: black;
+	color: white;
+	padding-top: 8%;
+}
+
+.sidebar div{
+	width: 100%;
+	height: 30px;
+}
+
+.sidebar div:hover{
+	background-color: #DF5B11;
+	width: 100%;
+	height: 30px;
+}
+
+
+
+/*-------------home.blade.php-------------*/
+
+.box{
+font-family: 'Droid Serif', serif;
+font-weight: 400;
+border: solid blue 1px;
+border-radius: 5px;
+width: 20%;
+height: 100px;
+position: relative;
+float: left;
+margin: 7px;
+padding: 10px 0px 10px 75px;
+
+}
+
+.dashboardSumary {
+font-family: 'Droid Serif', serif;
+font-weight: 400;
+width: 80%;
+position: relative;
+float: left;
+margin: 7px;
+padding: 10px;
+
+}
+
+.dashboardSumary .titleSumary{
+width: 100%;
+position: relative;
+padding: 10px;
+
+}
+
+.dashboardSumary .contentSumary{
+border: solid #DF5B11 2px;
+border-radius: 5px;
+width: 100%;
+position: relative;
+padding: 10px;
+
+}
+
+/*----------------messenger.blade.php-----------------*/
+
+.messenger-field{
+	width: 80% !important;
+	margin-left: 120px;
+}
+
