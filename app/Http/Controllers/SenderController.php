@@ -8,7 +8,10 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\RegIds;
 use App\Messages;
+use App\MessagesToPhones;
 use DB;
+
+use App\User;
 
 class SenderController extends Controller
 {
@@ -18,8 +21,15 @@ class SenderController extends Controller
      private $iosReturn = true;
      private $windowsPhoneSend = array();
      private $windowsPhoneReturn = true;
+     private $reachedUsers = array();
      private $message;
      
+     
+     public function __construct(User $user)
+	{
+		$this->middleware('auth');
+		
+	}
      
    /* 
      * regist phone Id from Phone to Mysql via controllers 
@@ -74,7 +84,7 @@ class SenderController extends Controller
 		$sendTo = $request->input('sendTo');
 		$this->message = $request->input('message');
 		
-		$this->saveMessage($this->message);
+		$savedMessage = $this->saveMessage($this->message);
 		
 		switch ($sendTo){
 			case 'allUsers':
@@ -84,6 +94,7 @@ class SenderController extends Controller
 					}
 					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'system' => 'android');
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
+					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
 				});
 			
@@ -93,28 +104,30 @@ class SenderController extends Controller
 					}
 					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'system' => 'ios');
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
+					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
 				});
-				
+							
 				$windowsPhoneData = RegIds::select('phoneId')->whereSystem('winPhone')->chunk(1000, function($users){
 					foreach($users as $user){
 						array_push($this->windowsPhoneSend,$user->phoneId);
 					}
 					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message, 'system' => 'winPhone');
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
+					$this->reachedUsers=array_merge($this->reachedUsers, $this->windowsPhoneSend);
 					$this->iosSend = array();
 				});
 				break;
 			case 'random':
 				$userData = RegIds::select('*')->orderBy(DB::raw('RAND()'))->first();
-				$params = array('phoneId' => $userData->phoneId, 'msg' => $message, 'system' => $userData->system);
-				$userCount = 1;
+				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message, 'system' => $userData->system);
+				array_push($this->reachedUsers, $userData->phoneId);
 				break;
 			case 'oneUser':
 				$userId = $request->input('userId');
 				$userData = RegIds::whereId($userId)->first();
-				$params = array('phoneId' => $userData->phoneId, 'msg' => $message, 'system' => $userData->system);
-				$userCount = 1;
+				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message, 'system' => $userData->system);
+				array_push($this->reachedUsers, $userData->phoneId);
 				break;	
 			case 'android':
 				$androidUsersData = RegIds::select('phoneId')->whereSystem('android')->chunk(1000, function($users){
@@ -123,6 +136,7 @@ class SenderController extends Controller
 					}
 					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'system' => 'android');
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
+					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
 				});
 				break;
@@ -133,6 +147,7 @@ class SenderController extends Controller
 					}
 					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'system' => 'ios');
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
+					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
 				});
 				break;
@@ -143,17 +158,29 @@ class SenderController extends Controller
 					}
 					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message, 'system' => 'winPhone');
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
-					$this->iosSend = array();
+					$this->reachedUsers=array_merge($this->reachedUser, $this->windowsPhoneSend);
+					$this->windowsPhoneSend = array();
 				});
 				break;		
 			default:
 				break;
 		}
 		
-		return redirect('/message-sent/ok');
+		if($this->relateUsersToMessages($this->reachedUsers,$savedMessage->id))
+			return redirect('/message-sent/ok');
+		else
+			return redirect('/message-sent/erro');
     }
     
     public function saveMessage($message){
 		return Messages::create(['message' => $message]); 
+	}
+	
+	public function relateUsersToMessages($users, $messageID){
+		foreach($users as $user){
+			$registerData = RegIds::select('id')->where('phoneId',$user)->first();
+			MessagesToPhones::create(['idRegister' => (int)$registerData->id, 'idMessage' => $messageID]);
+		}
+		return true;
 	}
 }

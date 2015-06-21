@@ -12,10 +12,18 @@ use App\MessagesToPhones;
 use App\Messages;
 use App\Settings;
 
+use App\User;
+
 use Table;
 
 class HomeController extends Controller
 {
+	
+	public function __construct(User $user)
+	{
+		$this->middleware('auth');
+		
+	}
     /**
      * Display a listing of the resource.
      *
@@ -24,13 +32,16 @@ class HomeController extends Controller
     public function index()
     {
 		$totalDevices = RegIds::select('id')->count();
+		$androidDevices = RegIds::select('id')->whereSystem('android')->count();
+		$iosDevices = RegIds::select('id')->whereSystem('ios')->count();
+		$winPhoneDevices = RegIds::select('id')->whereSystem('winPhone')->count();
 		
 		$lastMessage = Messages::select('*')->orderBy('id', 'desc')->first();
 		//$lastMessage = $lastMessage->message;
 		
 		$totalMessages = Messages::select('id')->count(); 
 		
-		return view('home', compact('totalDevices','lastMessage','totalMessages'));
+		return view('home', compact('totalDevices','androidDevices','iosDevices','winPhoneDevices','lastMessage','totalMessages'));
     }
 
     /**

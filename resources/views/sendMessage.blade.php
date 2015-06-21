@@ -1,16 +1,16 @@
 @extends('master')
 
 @section('status')
-
-Status: {{ $status }}
-
+<div class="statusBar" style="display: none;">
+Status: <span id="messageStatus">{{ $status }}</span>
+</div>
 @endsection
 
 @section('content')
 	
-	{!! Form::open(['url' => '/send-message']) !!}
+	{!! Form::open(['url' => '/send-message', 'class' => "messageForm"]) !!}
 	<div class="form-group">
-	Send messages to: {!! Form::select('sendTo', $deviceNames, '',['class' => 'form-control messenger-field', 'id' => 'messengerSendSelect']) !!}
+	<span class="panel-title">Send messages to: </span>{!! Form::select('sendTo', $deviceNames, '',['class' => 'form-control messenger-field', 'id' => 'messengerSendSelect']) !!}
 	</div>
 	
 	<div class="form-group extraOptions" style="display: none;">
