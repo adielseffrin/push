@@ -10,9 +10,9 @@
     </head>
     <body>
 		<div class="sidebar">
-			<div class="item btn"><a href="{{action('HomeController@sendMessage')}}"> Send Message </a></div>
-			<div class="item btn"><a href="{{action('HomeController@sentMessages')}}">Sent Messages</a></div>
-			<div class="item btn"><a href="{{action('HomeController@configs')}}">Configs </a></div>
+			<div class="item btn"><a href="/send-message"> Send Message </a></div>
+			<div class="item btn"><a href="/sent-messages">Sent Messages</a></div>
+			<div class="item btn"><a href="/settings">Settings </a></div>
 		</div>
         <div class="container">
 		

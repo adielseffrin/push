@@ -71,10 +71,19 @@ padding: 10px;
 
 }
 
-/*----------------messenger.blade.php-----------------*/
+/*----------------sendMessages.blade.php-----------------*/
 
 .messenger-field{
 	width: 80% !important;
 	margin-left: 120px;
 }
 
+/*----------------sentMessages.blade.php-----------------*/
+
+.sentTable, .settingsTable{
+	position: relative;
+	width: 80%;
+	display: block;
+	float: left;
+	margin-left: 20px;
+}

@@ -13,6 +13,11 @@
 
 Route::get('/', 'HomeController@index');
 Route::get('/send-message', 'HomeController@sendMessage');
-Route::post('/send-message', 'HomeController@sendPush');
+Route::get('/message-sent/{status}', 'HomeController@sendMessage');
+Route::post('/send-message', 'SenderController@sendPush');
 Route::get('/sent-messages', 'HomeController@sentMessages');
-Route::get('/configs', 'HomeController@configs');
+Route::get('/settings', 'HomeController@settings');
+Route::get('/settings/{slug}/edit', 'HomeController@editSetting');
+patch('/settings/{slug}', 'HomeController@updateSetting');
+
+get('/register','SenderController@register');

@@ -13,7 +13,7 @@
 
 <div class="dashboardSumary">
 <div class="titleSumary">Last message Sent</div>
-<div class="contentSumary">{{ $lastMessage }}</div>
+<div class="contentSumary">"{{ $lastMessage->message }}" at {{ $lastMessage->created_at->diffForHumans() }} </div>
 </div>
 
 @endsection

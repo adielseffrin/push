@@ -2,20 +2,20 @@
 
 @section('status')
 
-Status: 
+Status: {{ $status }}
 
 @endsection
 
 @section('content')
 	
-	{!! Form::open() !!}
+	{!! Form::open(['url' => '/send-message']) !!}
 	<div class="form-group">
-	Send messages to: {!! Form::select('systems', $deviceNames, '',['class' => 'form-control messenger-field', 'id' => 'messengerSendSelect']) !!}
+	Send messages to: {!! Form::select('sendTo', $deviceNames, '',['class' => 'form-control messenger-field', 'id' => 'messengerSendSelect']) !!}
 	</div>
 	
 	<div class="form-group extraOptions" style="display: none;">
 	
-	{!! Form::select('users',$users,'',['class' => 'form-control messenger-field', 'id' => 'messengerUserSelect']) !!}
+	{!! Form::select('userId',$users,'',['class' => 'form-control messenger-field', 'id' => 'messengerUserSelect']) !!}
 	
 	</div>
 	

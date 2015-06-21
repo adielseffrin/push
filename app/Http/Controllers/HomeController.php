@@ -10,6 +10,9 @@ use App\Http\Controllers\Controller;
 use App\RegIds;
 use App\MessagesToPhones;
 use App\Messages;
+use App\Settings;
+
+use Table;
 
 class HomeController extends Controller
 {
@@ -22,12 +25,8 @@ class HomeController extends Controller
     {
 		$totalDevices = RegIds::select('id')->count();
 		
-		$lastMessageId = MessagesToPhones::select('idMessage')
-								->orderBy('sent_at', 'desc')
-								->first();
-		$lastMessageId = $lastMessageId->idMessage;
-		$lastMessage = Messages::select('message')->whereId($lastMessageId)->first();
-		$lastMessage = $lastMessage->message;
+		$lastMessage = Messages::select('*')->orderBy('id', 'desc')->first();
+		//$lastMessage = $lastMessage->message;
 		
 		$totalMessages = Messages::select('id')->count(); 
 		
@@ -39,8 +38,9 @@ class HomeController extends Controller
      *
      * @return Response
      */
-    public function sendMessage()
+    public function sendMessage($slug = '')
     {
+				
         $deviceNames = array();
         $users = array();
         
@@ -56,8 +56,19 @@ class HomeController extends Controller
 				$users[$ru['id']] = $ru['email']." (".$ru['system'].")";
 		}
         
+        switch($slug){
+			case "ok":
+				$status = "Message Sucessfully Sent!";
+				break;
+			case "error":
+				$status = "Error to Send Message!";
+				break;
+			default:
+				$status = '';
+				break;
+		}
         
-        return view('sendMessage', compact('deviceNames', 'users'));
+        return view('sendMessage', compact('deviceNames', 'users', 'status'));
     }
 
     /**
@@ -69,23 +80,44 @@ class HomeController extends Controller
     {
         return view('sent');
     }
-    
-    /**
-     * Send de push message received by the post form
-     *
-     * @return Response
-     */
-    public function sendPush(){
-			return 'it\'s Time!';
-	}
 
 
 	public function sentMessages(){
-			return view('sentMessages');
+		
+		$sentMessages = Messages::sorted()->orderBy('id','desc')->paginate();
+		$table = Table::create($sentMessages, ['id', 'message']);
+		$table->addColumn('created_at', 'Added', function($model) {
+			return $model->created_at->diffForHumans();
+		});
+		
+		$totalMessages = Messages::select('id')->count(); 
+		
+		return view('sentMessages', compact('table','totalMessages'));
 	}
 	
-	public function configs(){
-			return 'it\'s Time!';
+	public function settings(){
+		$settings = Settings::get();
+		$table = Table::create($settings);
+		$table->setColumns(['id','config','value']);
+		$table->addColumn('', 'Edit', function($model) {
+			return "<a href='".action('HomeController@editSetting',['slug' => $model->slug])."'><img src='/img/edit.svg' /></a>";
+		});
+		
+		return view('settings',compact('settings','table'));
+	}
+	
+	public function editSetting($slug){
+		$setting = Settings::get()->where('slug',$slug)->first();
+		return view('editSettings',compact('setting'));
+	}
+	
+	public function updateSetting($slug, Request $request){
+		$setting = Settings::whereSlug($slug)->first();
+		
+		$setting->value = $request->get('value');
+		$setting->save();
+		
+		return redirect('settings');
 	}
 	
 }
