@@ -116,6 +116,11 @@ color: rgb(50, 98, 136);
 margin: 5px;
 }
 
+.infoBox img{
+margin-right: 8px;
+
+}
+
 .sentBox{
 background: url('/img/sent.png') 0px 0px no-repeat;
 background-size: 48px;
@@ -188,3 +193,10 @@ padding: 7px;
 
 }
 
+/*--------------phone.index.blade.php--------------*/
+.simulatorDetails{
+position: relative;
+float: right;
+top: -45px;
+
+}

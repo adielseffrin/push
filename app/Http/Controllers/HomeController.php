@@ -6,31 +6,45 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-
+/*
+ * Models related to DB Tables
+ * */
 use App\RegIds;
 use App\MessagesToPhones;
 use App\Messages;
 use App\Settings;
 
 use App\User;
-
+/*
+ * Gbrock class to speedup table (sorted or not) creation and populate
+ * */
 use Table;
 
 class HomeController extends Controller
 {
-	
+	/*
+	 * 
+	 * name: __construct
+	 * @param User model
+	 * @return HomeController object for authenticated users
+	 * 
+	 */
 	public function __construct(User $user)
 	{
 		$this->middleware('auth');
-		
 	}
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response
-     */
-    public function index()
-    {
+   
+	
+	/*
+	 * Retrieve from DB Tables data to fill the dashboard/initial
+	 * page for legged users
+	 * name: index
+	 * @param
+	 * @return View home.blade.php
+	 * 
+	 */
+	public function index()
+	{
 		$totalDevices = RegIds::select('id')->count();
 		$androidDevices = RegIds::select('id')->whereSystem('android')->count();
 		$iosDevices = RegIds::select('id')->whereSystem('ios')->count();
@@ -42,12 +56,15 @@ class HomeController extends Controller
 		$totalMessages = Messages::select('id')->count(); 
 		
 		return view('home', compact('totalDevices','androidDevices','iosDevices','winPhoneDevices','lastMessage','totalMessages'));
-    }
+	}
 
     /**
      * Show the form for creating a new messages.
-     *
-     * @return Response
+     * If slug was defined as not empty, display the previsou sent
+     * message status
+     * name: sendMessage
+	 * @param [slug]
+     * @return View sendMessage.blade.php
      */
     public function sendMessage($slug = '')
     {
@@ -56,16 +73,26 @@ class HomeController extends Controller
         $users = array();
         
         $regSystem = RegIds::select('system')->distinct()->get();
+        /*
+         * Only show systems of registered devices
+         * Include the word "User" for stetic reason
+         */
         foreach($regSystem as $rs){
 			$deviceNames[$rs['system']] = $rs['system'].' Users';
 		}
+		//These option will always be displayed
 		$hardSendData = array('allUsers' => 'All Users', 'random' => 'Random User', 'oneUser'=>'One User');
 		$deviceNames = array_merge($hardSendData, $deviceNames);
         
+        /*
+         * When sending a message for a specific user, display the registered
+         * email to identify the user
+        */
         $regUsers = RegIds::select('id', 'email', 'system')->get();
         foreach($regUsers as $ru){
 				$users[$ru['id']] = $ru['email']." (".$ru['system'].")";
 		}
+        
         
         switch($slug){
 			case "ok":
@@ -82,17 +109,13 @@ class HomeController extends Controller
         return view('sendMessage', compact('deviceNames', 'users', 'status'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @return Response
-     */
-    public function sent()
-    {
-        return view('sent');
-    }
-
-
+	/*
+	* Load the area responsible to see the sent messages
+	* name: sentMessages
+	* @param
+	* @return View sentMessages.blade.php
+	* 
+	*/
 	public function sentMessages(){
 		
 		$sentMessages = Messages::sorted()->orderBy('id','desc')->paginate();
@@ -106,6 +129,13 @@ class HomeController extends Controller
 		return view('sentMessages', compact('table','totalMessages'));
 	}
 	
+	/*
+	 * Load the area responsible to see the settings list
+	 * name: settings
+	 * @param
+	 * @return View settings.blade.php
+	 * 
+	 */
 	public function settings(){
 		$settings = Settings::get();
 		$table = Table::create($settings);
@@ -117,11 +147,25 @@ class HomeController extends Controller
 		return view('settings',compact('settings','table'));
 	}
 	
+	/*
+	 * Load the view with the update form for a specific setting
+	 * name: editSetting
+	 * @param string $slug
+	 * @return View editSettings.blade.php
+	 * 
+	 */
 	public function editSetting($slug){
 		$setting = Settings::get()->where('slug',$slug)->first();
 		return view('editSettings',compact('setting'));
 	}
 	
+	/*
+	 * Save the changes made in a setting
+	 * name: updateSetting
+	 * @param string $slug, Request $request
+	 * @return Responde redirect to /settings
+	 * 
+	 */
 	public function updateSetting($slug, Request $request){
 		$setting = Settings::whereSlug($slug)->first();
 		

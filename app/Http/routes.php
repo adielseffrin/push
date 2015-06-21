@@ -20,9 +20,10 @@ Route::get('/settings', 'HomeController@settings');
 Route::get('/settings/{slug}/edit', 'HomeController@editSetting');
 patch('/settings/{slug}', 'HomeController@updateSetting');
 
-get('/register','SenderController@register');
-
 Route::controllers([
 	'auth' => 'Auth\AuthController',
 	'password' => 'Auth\PasswordController',
 ]);
+
+post('/register','RegisterController@register');
+get('/simulator','RegisterController@index');

@@ -22,8 +22,14 @@
 					<li><a href="/settings">Settings </a></li>
 				</ul>
 				
+				
+				<!-- Reverse order due the float:right assign order
+				 in style from navbar-right-->
 				<ul class="nav navbar-nav navbar-right">
 						<li><a href="{{ url('/auth/logout') }}">Logout</a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+						<li><a href="{{ url('/simulator') }}">Phone Simulator</a></li>
 				</ul>
 			</div>
 		</div>

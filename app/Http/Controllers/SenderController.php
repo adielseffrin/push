@@ -15,6 +15,11 @@ use App\User;
 
 class SenderController extends Controller
 {
+	/*
+	 * We need this private variables to keep the data returned
+	 * in anonimous functions inside the BD chuck and use in 
+	 * sendPush method.
+	 * */
 	 private $androidSend = array();
 	 private $androidReturn = true;
      private $iosSend = array();
@@ -25,28 +30,28 @@ class SenderController extends Controller
      private $message;
      
      
-     public function __construct(User $user)
+     /*
+	 * 
+	 * name: __construct
+	 * @param User model
+	 * @return SenderController object for authenticated users
+	 * 
+	 */
+	public function __construct(User $user)
 	{
 		$this->middleware('auth');
-		
 	}
      
-   /* 
-     * regist phone Id from Phone to Mysql via controllers 
-     * Look a tableSchema at the bottom 
-     * @ $params["appType"] : android or ios.. 
-     * @ $params["appId"] : //APA91bGEGu5NSyYDYp5OMO4mZ0j1n2DznGARaNFVcCYfLHvHat..... or 6b1653ad818a89fc6937f5067a9b372aec79edeb9504d6ef.... 
-     **/ 
-    public function register(Request $request){ 
-             
-       $registration = RegIds::create($request->all());
-       
-       return 1;
-    }
+  
     
      /** 
-     * For Android GCM 
-     * $params["msg"] : Expected Message For GCM 
+     * Send push messages to Android devices via GCM 
+     * name: sendMessageToAndroid
+     * @param array $params
+     * @ $params["msg"] : Expected Message 
+     * @ $params["phoneId"] : the Id of device
+     * 
+     * return bool
      */ 
     private function sendMessageToAndroid($params) { 
 		// Sending messages to Android Devices
@@ -54,45 +59,69 @@ class SenderController extends Controller
 	} 
      
     /** 
-     * For IOS APNS 
-     * $params["msg"] : Expected Message For APNS 
+     * Send push messages to IOS devices via APNS 
+     *
+     *  name: sendMessageToIos
+     * @param array $params
+     * @ $params["msg"] : Expected Message 
+     * 
+     * return bool
      */ 
     private function sendMessageToIos($params) { 
 		//Sending messages to iOS Devices 
 		return true;
     }
              
-    /** 
-     * For WP Service 
-     * $params["msg"] : Expected Message For WPS
+     /** 
+     * Send push messages to windows phone devices
+     * name: sendMessageToWindowsPhone
+     * @param array $params
+     * @ $params["msg"] : Expected Message 
+     * 
+     * return bool
      */ 
     private function sendMessageToWindowsPhone($params) { 
 		//Sending messages to windows Phone Devices
 		return true; 
     }
-    
-     /** 
-     * Step 2. 
-     * Send message to each phone from web App. 
-     * @params : Array() : messages () 
-     */ 
-    
+           
      
+	/*
+	 * Choose the proper method to send push messages for
+	 * each selected devices
+	 * Call methods to save the message in DB as well as to save
+	 * the users that received the message
+	 * 
+	 * name: sendPush
+	 * @param Request $request
+	 * 
+	 * @return Response redirect message-sent/<status>
+	 * @ <status> ok
+	 * @ <status> error
+	 */
     public function sendPush(Request $request){
 		
 		$params = array();
+		//get the target users and message from $request
 		$sendTo = $request->input('sendTo');
 		$this->message = $request->input('message');
 		
+		//Save message in DB and store its id
 		$savedMessage = $this->saveMessage($this->message);
 		
+		
+		/* 
+		 * Using the target user(s), prepare the array of users and send
+		 * the message. It is necessary once the GCM and APNS can handle
+		 * only 1000 messages at time.
+		*/
 		switch ($sendTo){
 			case 'allUsers':
 				$androidUsersData = RegIds::select('phoneId')->whereSystem('android')->chunk(1000, function($users){
 					foreach($users as $user){
 						array_push($this->androidSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'system' => 'android');
+					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message);
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
@@ -102,7 +131,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->iosSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'system' => 'ios');
+					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message);
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
@@ -112,7 +141,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->windowsPhoneSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message, 'system' => 'winPhone');
+					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message);
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->windowsPhoneSend);
 					$this->iosSend = array();
@@ -120,13 +149,13 @@ class SenderController extends Controller
 				break;
 			case 'random':
 				$userData = RegIds::select('*')->orderBy(DB::raw('RAND()'))->first();
-				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message, 'system' => $userData->system);
+				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message);
 				array_push($this->reachedUsers, $userData->phoneId);
 				break;
 			case 'oneUser':
 				$userId = $request->input('userId');
 				$userData = RegIds::whereId($userId)->first();
-				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message, 'system' => $userData->system);
+				$params = array('phoneId' => array($userData->phoneId), 'msg' => $message);
 				array_push($this->reachedUsers, $userData->phoneId);
 				break;	
 			case 'android':
@@ -134,7 +163,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->androidSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'system' => 'android');
+					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message);
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
@@ -145,7 +174,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->iosSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'system' => 'ios');
+					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message);
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
@@ -156,7 +185,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->windowsPhoneSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message, 'system' => 'winPhone');
+					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message);
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
 					$this->reachedUsers=array_merge($this->reachedUser, $this->windowsPhoneSend);
 					$this->windowsPhoneSend = array();
@@ -166,16 +195,37 @@ class SenderController extends Controller
 				break;
 		}
 		
+		/*
+		 * Save the message id and the users id into a relational
+		 * table
+		 * */
 		if($this->relateUsersToMessages($this->reachedUsers,$savedMessage->id))
 			return redirect('/message-sent/ok');
 		else
 			return redirect('/message-sent/erro');
     }
     
+    
+	/*
+	 * Save the $message into DB Table
+	 * 
+	 * name: saveMessage
+	 * @param text $message
+	 * 
+	 * @return Response DB return
+	 */
     public function saveMessage($message){
 		return Messages::create(['message' => $message]); 
 	}
 	
+	
+	/*
+	 * name: relateUsersToMessages
+	 * @param string $user
+	 * @param int $messageID
+	 * 
+	 * @return bool
+	 */
 	public function relateUsersToMessages($users, $messageID){
 		foreach($users as $user){
 			$registerData = RegIds::select('id')->where('phoneId',$user)->first();
