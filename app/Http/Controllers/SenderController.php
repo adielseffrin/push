@@ -121,9 +121,9 @@ class SenderController extends Controller
 		$androidKeyObj = Settings::select('value')->whereSlug('android-key')->first();
 		$this->androidKey = $androidKeyObj->value;
 		$iosKeyObj = Settings::select('value')->whereSlug('ios-key')->first();
-		$this->iosKey = $iosKey->value;
+		$this->iosKey = $iosKeyObj->value;
 		$winPhoneKeyObj = Settings::select('value')->whereSlug('winPhone-key')->first();
-		$this->winPhoneKey = $winPhoneKey->value;
+		$this->winPhoneKey = $winPhoneKeyObj->value;
 		
 		/* 
 		 * Using the target user(s), prepare the array of users and send
