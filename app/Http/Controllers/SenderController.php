@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+
 use App\RegIds;
 use App\Messages;
 use App\MessagesToPhones;
+use App\Settings;
 use DB;
 
 use App\User;
@@ -20,12 +22,18 @@ class SenderController extends Controller
 	 * in anonimous functions inside the BD chuck and use in 
 	 * sendPush method.
 	 * */
+	 private $androidKey;
 	 private $androidSend = array();
 	 private $androidReturn = true;
+     
+     private $iosKey;
      private $iosSend = array();
      private $iosReturn = true;
+     
+     private $windowsPhoneKey;
      private $windowsPhoneSend = array();
      private $windowsPhoneReturn = true;
+     
      private $reachedUsers = array();
      private $message;
      
@@ -109,6 +117,13 @@ class SenderController extends Controller
 		//Save message in DB and store its id
 		$savedMessage = $this->saveMessage($this->message);
 		
+		//retrieve the system keys
+		$androidKeyObj = Settings::select('value')->whereSlug('android-key')->first();
+		$this->androidKey = $androidKeyObj->value;
+		$iosKeyObj = Settings::select('value')->whereSlug('ios-key')->first();
+		$this->iosKey = $iosKey->value;
+		$winPhoneKeyObj = Settings::select('value')->whereSlug('winPhone-key')->first();
+		$this->winPhoneKey = $winPhoneKey->value;
 		
 		/* 
 		 * Using the target user(s), prepare the array of users and send
@@ -121,7 +136,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->androidSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'key' => $this->androidKey);
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
@@ -131,7 +146,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->iosSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'key' => $this->iosKey);
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
@@ -141,7 +156,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->windowsPhoneSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message,'key' => $this->winPhoneKey);
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->windowsPhoneSend);
 					$this->iosSend = array();
@@ -163,7 +178,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->androidSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->androidSend, 'msg' => $this->message, 'key' => $this->androidKey);
 					$this->androidReturn = ($this->androidReturn && $this->sendMessageToAndroid($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->androidSend);
 					$this->androidSend = array();
@@ -174,7 +189,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->iosSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->iosSend, 'msg' => $this->message, 'key' => $this->iosKey);
 					$this->iosReturn = ($this->iosReturn && $this->sendMessageToIos($params));
 					$this->reachedUsers=array_merge($this->reachedUsers, $this->iosSend);
 					$this->iosSend = array();
@@ -185,7 +200,7 @@ class SenderController extends Controller
 					foreach($users as $user){
 						array_push($this->windowsPhoneSend,$user->phoneId);
 					}
-					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message);
+					$params = array('phoneId' => $this->windowsPhoneSend, 'msg' => $this->message,'key' => $this->winPhoneKey);
 					$this->windowsPhoneReturn = ($this->windowsPhoneReturn && $this->sendMessageToWindowsPhone($params));
 					$this->reachedUsers=array_merge($this->reachedUser, $this->windowsPhoneSend);
 					$this->windowsPhoneSend = array();
