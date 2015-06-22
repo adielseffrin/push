@@ -11,19 +11,21 @@
 |
 */
 
-Route::get('/', 'HomeController@index');
-Route::get('/send-message', 'HomeController@sendMessage');
-Route::get('/message-sent/{status}', 'HomeController@sendMessage');
-Route::post('/send-message', 'SenderController@sendPush');
-Route::get('/sent-messages', 'HomeController@sentMessages');
-Route::get('/settings', 'HomeController@settings');
-Route::get('/settings/{slug}/edit', 'HomeController@editSetting');
-patch('/settings/{slug}', 'HomeController@updateSetting');
-
 Route::controllers([
 	'auth' => 'Auth\AuthController',
 	'password' => 'Auth\PasswordController',
 ]);
 
+Route::get('/', 'HomeController@index');
+Route::get('/send-message', 'HomeController@sendMessage');
+Route::get('/message-sent/{status}', 'HomeController@sendMessage');
+Route::get('/sent-messages', 'HomeController@sentMessages');
+Route::get('/settings', 'HomeController@settings');
+Route::get('/settings/{slug}/edit', 'HomeController@editSetting');
+patch('/settings/{slug}', 'HomeController@updateSetting');
+
+Route::post('/send-message', 'SenderController@sendPush');
+
 post('/register','RegisterController@register');
 get('/simulator','RegisterController@index');
+get('/simulator/fetchDevice/{system}','RegisterController@fetchDevice');

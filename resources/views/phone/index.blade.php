@@ -23,8 +23,16 @@
 {!! Form::close() !!}
 
 <div class="simulatorDetails">
-	<span class="infoBox"><img src='/img/android.svg' width='28px' />{{ $androidDevices }}</span>
-	<span class="infoBox"><img src='/img/apple.svg' width='28px' />{{ $iosDevices }}</span>
-	<span class="infoBox"><img src='/img/windows.svg' width='28px' />{{ $winPhoneDevices }}</span>
+	<span class="infoBox"><strong>Request Devices List:</strong></span>
+	<span class="infoBox"><a href="/simulator/fetchDevice/all"><img src='/img/device.svg' width='28px' />{{ $totalDevices }}</a></span>
+	<span class="infoBox"><a href="/simulator/fetchDevice/android"><img src='/img/android.svg' width='28px' />{{ $androidDevices }}</a></span>
+	<span class="infoBox"><a href="/simulator/fetchDevice/ios"><img src='/img/apple.svg' width='28px' />{{ $iosDevices }}</a></span>
+	<span class="infoBox"><a href="/simulator/fetchDevice/winphone"><img src='/img/windows.svg' width='28px' />{{ $winPhoneDevices }}</a></span>
 </div>
+@endsection
+
+@section('response')
+
+@include('phone._response')
+
 @endsection
