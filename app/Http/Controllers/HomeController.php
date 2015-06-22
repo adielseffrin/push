@@ -51,7 +51,6 @@ class HomeController extends Controller
 		$winPhoneDevices = RegIds::select('id')->whereSystem('winPhone')->count();
 		
 		$lastMessage = Messages::select('*')->orderBy('id', 'desc')->first();
-		//$lastMessage = $lastMessage->message;
 		
 		$totalMessages = Messages::select('id')->count(); 
 		

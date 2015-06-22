@@ -20,8 +20,13 @@
 </div>
 
 <div class="dashboardSumary">
-<div class="titleSumary">Last message Sent</div>
-<div class="contentSumary">"{{ $lastMessage->message }}" at {{ $lastMessage->created_at->diffForHumans() }} </div>
+	<div class="titleSumary">Last message Sent</div>
+@if($lastMessage)
+	<div class="contentSumary">"{{ $lastMessage->message }}" at {{ $lastMessage->created_at->diffForHumans() }} </div>
+@else
+	<div class="contentSumary">No messages sent.</div>
+@endif
 </div>
+
 
 @endsection
